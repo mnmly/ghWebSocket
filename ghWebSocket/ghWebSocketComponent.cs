@@ -30,7 +30,7 @@ namespace MNML
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("Host", "H", "Hostname", GH_ParamAccess.item);
+            pManager.AddTextParameter("Host", "H", "Hostname", GH_ParamAccess.item, "localhost");
             pManager.AddNumberParameter("Port", "P", "Port Number", GH_ParamAccess.item);
         }
 

@@ -1,7 +1,10 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29201.188
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ghWebSocket", "ghWebSocket\ghWebSocket.csproj", "{F2FA73EB-460E-4FEB-B862-45F478AA75F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ghWebSocketWin", "ghWebSocketWin\ghWebSocketWin.csproj", "{8237547F-CD43-4EAD-B7F3-74CF63585D88}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,5 +16,15 @@ Global
 		{F2FA73EB-460E-4FEB-B862-45F478AA75F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2FA73EB-460E-4FEB-B862-45F478AA75F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2FA73EB-460E-4FEB-B862-45F478AA75F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8237547F-CD43-4EAD-B7F3-74CF63585D88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8237547F-CD43-4EAD-B7F3-74CF63585D88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8237547F-CD43-4EAD-B7F3-74CF63585D88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8237547F-CD43-4EAD-B7F3-74CF63585D88}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C446BC05-62EC-4039-B090-94A49B29B94D}
 	EndGlobalSection
 EndGlobal
