@@ -32,6 +32,9 @@ namespace MNML
         {
             pManager.AddTextParameter("Host", "H", "Hostname", GH_ParamAccess.item, "localhost");
             pManager.AddNumberParameter("Port", "P", "Port Number", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Reconnect", "R", "Reconnect", GH_ParamAccess.item, false);
+
+            pManager[2].Optional = true;
         }
 
         /// <summary>
@@ -51,26 +54,36 @@ namespace MNML
         {
             String host = "";
             double port = 0.0;
+            bool reconnect = false;
 
             if (!DA.GetData(0, ref host)) return;
             if (!DA.GetData(1, ref port)) return;
+            DA.GetData(2, ref reconnect);
 
-            String _endpoint = String.Format("ws://{0}:{1}", host, Convert.ToInt32(port));
-            if (endpoint != _endpoint)
-            {
-                endpoint = _endpoint;
-                if (socket != null) { socket.Dispose(); }
-                socket = new WebSocket(endpoint);
-            }
-            if (socket.ReadyState != WebSocketState.Open)
+            if (socket != null && reconnect)
             {
                 socket.Connect();
+            } else
+            {
+                String _endpoint = String.Format("ws://{0}:{1}", host, Convert.ToInt32(port));
+                if (endpoint != _endpoint)
+                {
+                    endpoint = _endpoint;
+                    if (socket != null) { socket.Dispose(); }
+                    socket = new WebSocket(endpoint);
+                }
+                if (socket.ReadyState != WebSocketState.Open)
+                {
+                    socket.Connect();
+                }
             }
+
             DA.SetData(0, socket);
         }
 
         public override void RemovedFromDocument(GH_Document document)
         {
+            socket.Dispose();
             socket = null;
             base.RemovedFromDocument(document);
         }
