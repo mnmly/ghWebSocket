@@ -62,6 +62,8 @@ namespace MNML
 
             if (socket != null && reconnect)
             {
+                socket.Dispose();
+                socket = new WebSocket(endpoint);
                 socket.Connect();
             } else
             {
