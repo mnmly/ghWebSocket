@@ -85,8 +85,12 @@ namespace MNML
 
         public override void RemovedFromDocument(GH_Document document)
         {
-            socket.Close();
-            socket = null;
+            if (socket != null)
+            {
+                socket.Close();
+                socket = null;
+            }
+
             base.RemovedFromDocument(document);
         }
 
