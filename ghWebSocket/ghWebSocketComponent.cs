@@ -62,7 +62,7 @@ namespace MNML
 
             if (socket != null && reconnect)
             {
-                socket.Dispose();
+                socket.Close();
                 socket = new WebSocket(endpoint);
                 socket.Connect();
             } else
@@ -71,7 +71,7 @@ namespace MNML
                 if (endpoint != _endpoint)
                 {
                     endpoint = _endpoint;
-                    if (socket != null) { socket.Dispose(); }
+                    if (socket != null) { socket.Close(); }
                     socket = new WebSocket(endpoint);
                 }
                 if (socket.ReadyState != WebSocketState.Open)
@@ -85,7 +85,7 @@ namespace MNML
 
         public override void RemovedFromDocument(GH_Document document)
         {
-            socket.Dispose();
+            socket.Close();
             socket = null;
             base.RemovedFromDocument(document);
         }

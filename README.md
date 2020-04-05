@@ -1,5 +1,6 @@
 ## WebSocket Client for Grasshopper
 
+WebSocket Client for Grashopper
 (WIP)
 
 ## Installation

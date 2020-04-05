@@ -8,6 +8,7 @@
     <RootNamespace>ghWebSocket</RootNamespace>
     <AssemblyName>ghWebSocket</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <ReleaseVersion>0.2</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,19 +32,22 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
-    <Reference Include="websocket-sharp.clone">
-      <HintPath>..\packages\websocket-sharp.clone.3.0.0\lib\net45\websocket-sharp.clone.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="mscorlib" />
     <Reference Include="RhinoCommon">
       <HintPath>..\..\..\..\..\..\Applications\Rhinoceros.app\Contents\Frameworks\RhCore.framework\Versions\A\Resources\RhinoCommon.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Grasshopper">
       <HintPath>..\..\..\..\..\..\Applications\Rhinoceros.app\Contents\Frameworks\RhCore.framework\Versions\A\Resources\ManagedPlugIns\GrasshopperPlugin.rhp\Grasshopper.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="GH_IO">
       <HintPath>..\..\..\..\..\..\Applications\Rhinoceros.app\Contents\Frameworks\RhCore.framework\Versions\A\Resources\ManagedPlugIns\GrasshopperPlugin.rhp\GH_IO.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="websocket-sharp">
+      <HintPath>..\packages\WebSocketSharp.1.0.3-rc11\lib\websocket-sharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -51,6 +55,7 @@
     <Compile Include="ghWebSocketComponent.cs" />
     <Compile Include="ghWebSocketInfo.cs" />
     <Compile Include="WebSocketStateComponent.cs" />
+    <Compile Include="ghWebSocketSend.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

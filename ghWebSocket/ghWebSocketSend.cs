@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 
+using Grasshopper;
 using Grasshopper.Kernel;
+using Rhino.Geometry;
 using WebSocketSharp;
 
 namespace MNML
 {
-    public class WebSocketStateComponent : GH_Component
+    public class ghWebSocketSend : GH_Component
     {
         /// <summary>
         /// Each implementation of GH_Component must provide a public 
@@ -14,10 +17,10 @@ namespace MNML
         /// Subcategory the panel. If you use non-existing tab or panel names, 
         /// new tabs/panels will automatically be created.
         /// </summary>
-        public WebSocketStateComponent()
-            : base("WebSocket state", "WebSocket State",
-            "Shows websocket's Ready State",
-                   "MNML", "Communication")
+        public ghWebSocketSend()
+          : base("WebSocket Send", "WebSocket Send",
+            "Send Message via WebSocket",
+            "MNML", "Communication")
         {
         }
 
@@ -26,7 +29,12 @@ namespace MNML
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Socket", "S", "WebSocketClient", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Socket", "S", "Socket to send from", GH_ParamAccess.item);
+            pManager.AddTextParameter("Message", "M", "Socket Message", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Broadcast", "B", "Broadcast message (action: broadcast)", GH_ParamAccess.item, false);
+            pManager.AddBooleanParameter("Force Send", "F", "Send Message forcefully", GH_ParamAccess.item, false);
+            pManager[2].Optional = true;
+            pManager[3].Optional = true;
         }
 
         /// <summary>
@@ -34,7 +42,6 @@ namespace MNML
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("Socket Info", "I", "WebSocket Info", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -44,26 +51,18 @@ namespace MNML
         /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            String status = "";
             WebSocket socket = null;
-            if (!DA.GetData(0, ref socket)) return;
-            switch (socket.ReadyState)
-            {
-                case WebSocketState.Closed:
-                    status = "Closed";
-                    break;
-                case WebSocketState.Closing:
-                    status = "Closing";
-                    break;
-                case WebSocketState.Open:
-                    status = "Open";
+            string message = null;
+            bool broadcast = false;
+            if (!DA.GetData(0, ref socket)) { return; }
+            if (!DA.GetData(1, ref message)) { return; }
+            DA.GetData(2, ref broadcast);
 
-                    break;
-                case WebSocketState.Connecting:
-                    status = "Connecting";
-                    break;
+            if (broadcast)
+            {
+                message = "{\"action\": \"broadcast\", \"data\": \"" + message + "\"}";
             }
-            DA.SetData(0, status);
+            socket.Send(message);
         }
 
         /// <summary>
@@ -87,7 +86,7 @@ namespace MNML
         /// </summary>
         public override Guid ComponentGuid
         {
-            get { return new Guid("387f3635-a1da-43cc-8c67-1331884031e6"); }
+            get { return new Guid("6175312f-2616-4b41-9775-0e34ee320358"); }
         }
     }
 }
