@@ -1,15 +1,22 @@
 ﻿using System;
+using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 
 using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 using WebSocketSharp;
+using System.Text;
+using System.Text.Json;
 
 namespace MNML
 {
     public class ghWebSocketSend : GH_Component
     {
+        string previousMessage = null;
+        bool previousBroadcast = false;
+
         /// <summary>
         /// Each implementation of GH_Component must provide a public 
         /// constructor without any arguments.
@@ -22,6 +29,7 @@ namespace MNML
             "Send Message via WebSocket",
             "MNML", "Communication")
         {
+            Params.ParameterSourcesChanged += ParamSourcesChanged;
         }
 
         /// <summary>
@@ -34,7 +42,7 @@ namespace MNML
             pManager.AddBooleanParameter("Broadcast", "B", "Broadcast message (action: broadcast)", GH_ParamAccess.item, false);
             pManager.AddBooleanParameter("Force Send", "F", "Send Message forcefully", GH_ParamAccess.item, false);
             pManager[2].Optional = true;
-            pManager[3].Optional = true;
+            pManager[3].Optional = true; 
         }
 
         /// <summary>
@@ -42,6 +50,7 @@ namespace MNML
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
+            pManager.AddTextParameter("Message", "M", "Socket Message", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -54,15 +63,83 @@ namespace MNML
             WebSocket socket = null;
             string message = null;
             bool broadcast = false;
+            bool forceUpdate = false;
+            bool isMessageString = false;
+            bool needsUpdate = false;
             if (!DA.GetData(0, ref socket)) { return; }
             if (!DA.GetData(1, ref message)) { return; }
             DA.GetData(2, ref broadcast);
+            DA.GetData(3, ref forceUpdate);
 
-            if (broadcast)
+            JsonDocument doc = null;
+
+            if (previousBroadcast != broadcast)
             {
-                message = "{\"action\": \"broadcast\", \"data\": \"" + message + "\"}";
+                previousBroadcast = broadcast;
+                needsUpdate = true;
             }
-            socket.Send(message);
+            if (previousMessage != message)
+            {
+                previousMessage = message;
+                needsUpdate = true;
+            }
+
+            try
+            {
+                doc = JsonDocument.Parse(message);
+            }
+            catch (JsonException e)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, e.Message);
+                isMessageString = true;
+                doc = null;
+            }
+      
+            using (var stream = new MemoryStream())
+            {
+                using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false }))
+                {
+                    if (broadcast)
+                    {
+                        writer.WriteStartObject();
+                        writer.WriteString("action", "broadcast");
+                        writer.WritePropertyName("data");
+                        if (isMessageString)
+                        {
+                            writer.WriteStringValue(message);
+                        }
+                        else
+                        {
+                            doc.WriteTo(writer);
+                        }
+                        writer.WriteEndObject();
+                    } else
+                    {
+                        if (!isMessageString)
+                        {
+                            doc.WriteTo(writer);
+                        }
+                    }
+                    writer.Flush();
+                }
+                if (doc != null)
+                {
+                    message = Encoding.UTF8.GetString(stream.ToArray());
+                }
+            }
+
+            if (needsUpdate || forceUpdate)
+            {
+                socket.Send(message);
+                DA.SetData(0, message);
+            }
+        }
+
+        //This is for if any source connected, reconnected, removed, replacement 
+        private void ParamSourcesChanged(Object sender, GH_ParamServerEventArgs e)
+        {
+            previousMessage = null;
+            previousBroadcast = !previousBroadcast;
         }
 
         /// <summary>

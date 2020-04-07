@@ -57,7 +57,6 @@ namespace MNML
                     break;
                 case WebSocketState.Open:
                     status = "Open";
-
                     break;
                 case WebSocketState.Connecting:
                     status = "Connecting";
