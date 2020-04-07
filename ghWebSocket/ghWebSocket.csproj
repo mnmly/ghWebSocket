@@ -8,7 +8,7 @@
     <RootNamespace>ghWebSocket</RootNamespace>
     <AssemblyName>ghWebSocket</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
-    <ReleaseVersion>1.0.4</ReleaseVersion>
+    <ReleaseVersion>1.0.5</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -65,16 +65,15 @@
     <Reference Include="System.Text.Json">
       <HintPath>packages\System.Text.Json.4.7.1\lib\net461\System.Text.Json.dll</HintPath>
     </Reference>
+    <Reference Include="RhinoCommon">
+      <HintPath>..\..\..\..\..\..\Applications\RhinoWIP.app\Contents\Frameworks\RhCore.framework\Versions\A\Resources\RhinoCommon.dll</HintPath>
+    </Reference>
     <Reference Include="GH_IO">
-      <HintPath>..\..\..\..\..\..\Applications\RhinoWIP.app\Contents\Frameworks\RhCore.framework\Versions\A\Resources\ManagedPlugIns\GrasshopperPlugin.rhp\GH_IO.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Applications\Rhinoceros.app\Contents\Frameworks\RhCore.framework\Versions\A\Resources\ManagedPlugIns\GrasshopperPlugin.rhp\GH_IO.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Grasshopper">
-      <HintPath>..\..\..\..\..\..\Applications\RhinoWIP.app\Contents\Frameworks\RhCore.framework\Versions\A\Resources\ManagedPlugIns\GrasshopperPlugin.rhp\Grasshopper.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RhinoCommon">
-      <HintPath>..\..\..\..\..\..\Applications\RhinoWIP.app\Contents\Frameworks\RhCore.framework\Versions\A\Resources\RhinoCommon.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Applications\Rhinoceros.app\Contents\Frameworks\RhCore.framework\Versions\A\Resources\ManagedPlugIns\GrasshopperPlugin.rhp\Grasshopper.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -84,6 +83,7 @@
     <Compile Include="ghWebSocketInfo.cs" />
     <Compile Include="WebSocketStateComponent.cs" />
     <Compile Include="ghWebSocketSend.cs" />
+    <Compile Include="WebSocketReceiveComponent.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
