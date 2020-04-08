@@ -34,7 +34,7 @@ namespace MNML
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("Socket Info", "I", "WebSocket Info", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Socket Info", "I", "ReadyState", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -64,6 +64,25 @@ namespace MNML
             }
             DA.SetData(0, status);
         }
+
+        public override void AddedToDocument(GH_Document document)
+        {
+            base.AddedToDocument(document);
+            Attributes.ExpireLayout();
+            Attributes.PerformLayout();
+            var panel = new Grasshopper.Kernel.Special.GH_Panel();
+            panel.CreateAttributes();
+            var pivotPoint = new System.Drawing.PointF();
+            var bounds = Attributes.DocObject.Attributes.Bounds;
+            pivotPoint.X = (float)bounds.Right + 50;
+            pivotPoint.Y = (float)(bounds.Y + bounds.Height * 0.5);
+            panel.Attributes.Pivot = pivotPoint;
+            OnPingDocument().AddObject(panel, false);
+
+            panel.AddSource(Params.Output[0]);
+        }
+
+
 
         /// <summary>
         /// Provides an Icon for every component that will be visible in the User Interface.

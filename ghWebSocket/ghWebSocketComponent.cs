@@ -10,6 +10,9 @@ namespace MNML
 
         public WebSocket socket;
         public String endpoint;
+        private bool reconnect = false;
+        private string runtimeMessage = null;
+        private int reconnectionInterval = 1000;
 
         /// <summary>
         /// Each implementation of GH_Component must provide a public 
@@ -32,7 +35,7 @@ namespace MNML
         {
             pManager.AddTextParameter("Host", "H", "Hostname", GH_ParamAccess.item, "localhost");
             pManager.AddNumberParameter("Port", "P", "Port Number", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("Reconnect", "R", "Reconnect", GH_ParamAccess.item, false);
+            pManager.AddIntegerParameter("Interval", "I", "Reconnection Interval", GH_ParamAccess.item, 1000);
 
             pManager[2].Optional = true;
         }
@@ -54,44 +57,113 @@ namespace MNML
         {
             String host = "";
             double port = 0.0;
-            bool reconnect = false;
-
+            bool _reconnect = false;
+            bool needsUpdate = false;
+            
             if (!DA.GetData(0, ref host)) return;
             if (!DA.GetData(1, ref port)) return;
-            DA.GetData(2, ref reconnect);
+            DA.GetData(2, ref reconnectionInterval);
 
-            if (socket != null && reconnect)
+            String _endpoint = String.Format("ws://{0}:{1}", host, Convert.ToInt32(port));
+
+            needsUpdate = _reconnect || (endpoint != _endpoint) || (socket != null && socket.ReadyState != WebSocketState.Open);
+            
+            if (endpoint != _endpoint)
             {
-                socket.Close();
-                socket = new WebSocket(endpoint);
-                socket.Connect();
-            } else
-            {
-                String _endpoint = String.Format("ws://{0}:{1}", host, Convert.ToInt32(port));
-                if (endpoint != _endpoint)
-                {
-                    endpoint = _endpoint;
-                    if (socket != null) { socket.Close(); }
-                    socket = new WebSocket(endpoint);
-                }
-                if (socket.ReadyState != WebSocketState.Open)
-                {
-                    socket.Connect();
-                }
+                endpoint = _endpoint;
             }
 
+            reconnect = _reconnect;
+
+            if (needsUpdate)
+            {
+                if (socket != null)
+                {
+                    socket.Close();
+                    socket = null;
+                }
+                socket = Connect();
+            }
+            if (runtimeMessage !=null && runtimeMessage != "OPEN")
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, runtimeMessage);
+            } else
+            {
+                ClearRuntimeMessages();
+            }
             DA.SetData(0, socket);
         }
+
+        private WebSocket Connect()
+        {
+            var _socket = new WebSocket(endpoint);
+            _socket.OnOpen -= Socket_OnOpen;
+            _socket.OnOpen += Socket_OnOpen;
+            _socket.OnError -= Socket_OnError;
+            _socket.OnError += Socket_OnError;
+            _socket.OnClose -= Socket_OnClose;
+            _socket.OnClose += Socket_OnClose;
+            _socket.Connect();
+            return _socket;
+        }
+
+        private void Socket_OnClose(object sender, CloseEventArgs e)
+        {
+            runtimeMessage = "CLOSE " + e.Reason;
+            OnPingDocument()?.ScheduleSolution(reconnectionInterval, (GH_Document doc) => {
+                ExpireSolution(false);
+            });
+        }
+
+        private void Socket_OnError(object sender, ErrorEventArgs e)
+        {
+            runtimeMessage = "Error " + e.Message;
+            OnPingDocument()?.ScheduleSolution(reconnectionInterval, (GH_Document doc) => {
+                ExpireSolution(false);
+            });
+        }
+
+        private void Socket_OnOpen(object sender, EventArgs e)
+        {
+            if (runtimeMessage == "OPEN") return;
+            runtimeMessage = "OPEN";
+            var doc = OnPingDocument();
+            doc?.ScheduleSolution(5, Callback);
+        }
+
+        private void Callback(GH_Document doc)
+        {
+            ExpireSolution(false);
+        }
+
 
         public override void RemovedFromDocument(GH_Document document)
         {
             if (socket != null)
             {
+                socket.OnOpen -= Socket_OnOpen;
+                socket.OnError -= Socket_OnError;
+                socket.OnClose -= Socket_OnClose;
                 socket.Close();
                 socket = null;
             }
 
             base.RemovedFromDocument(document);
+        }
+
+        public override void AddedToDocument(GH_Document document)
+        {
+            base.AddedToDocument(document);
+            Attributes.ExpireLayout();
+            Attributes.PerformLayout();
+            var component = new WebSocketStateComponent();
+            var pivotPoint = new System.Drawing.PointF();
+            var bounds = Attributes.DocObject.Attributes.Bounds;
+            pivotPoint.X = (float)bounds.Right + 50;
+            pivotPoint.Y = (float)(bounds.Y + bounds.Height * 0.5);
+            component.Attributes.Pivot = pivotPoint;
+            OnPingDocument().AddObject(component, false);
+            component.Params.Input[0].AddSource(Params.Output[0]);
         }
 
         /// <summary>
