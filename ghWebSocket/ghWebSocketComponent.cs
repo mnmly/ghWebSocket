@@ -2,6 +2,8 @@
 
 using Grasshopper.Kernel;
 using WebSocketSharp;
+using System.Timers;
+using System.Text.RegularExpressions;
 
 namespace MNML
 {
@@ -13,7 +15,10 @@ namespace MNML
         private bool reconnect = false;
         private string runtimeMessage = null;
         private int reconnectionInterval = 1000;
-
+        private DateTime lastPingTime;
+        private TimeSpan pingPongInterval = new TimeSpan(0, 0, 5);
+        private Timer pingCheckTimer = null;
+      
         /// <summary>
         /// Each implementation of GH_Component must provide a public 
         /// constructor without any arguments.
@@ -66,7 +71,7 @@ namespace MNML
 
             String _endpoint = String.Format("ws://{0}:{1}", host, Convert.ToInt32(port));
 
-            needsUpdate = _reconnect || (endpoint != _endpoint) || (socket != null && socket.ReadyState != WebSocketState.Open);
+            needsUpdate = socket == null || _reconnect || (endpoint != _endpoint) || (socket != null && socket.ReadyState != WebSocketState.Open);
             
             if (endpoint != _endpoint)
             {
@@ -103,9 +108,53 @@ namespace MNML
             _socket.OnError += Socket_OnError;
             _socket.OnClose -= Socket_OnClose;
             _socket.OnClose += Socket_OnClose;
+            _socket.OnMessage -= Socket_OnMessage;
+            _socket.OnMessage += Socket_OnMessage;
             _socket.Connect();
             return _socket;
         }
+
+        private void Socket_OnMessage(object sender, MessageEventArgs e)
+        {
+            if (e.Data.Contains("mnml:ping"))
+            {
+                lastPingTime = DateTime.Now;
+                var delay = Int32.Parse(Regex.Match(e.Data, @"\d+").Value);
+                pingPongInterval = new TimeSpan(0, 0, 0, 0, delay);
+                (sender as WebSocket).Send("{\"action\":\"broadcast\", \"data\": \"mnml:pong\"}");
+                Console.WriteLine("Receiving ping at " + lastPingTime.ToString());
+                if (pingCheckTimer != null)
+                {
+                    pingCheckTimer.Stop();
+                    pingCheckTimer.Elapsed -= CheckIfPingIsReceived;
+                    pingCheckTimer.Dispose();
+                }
+                pingCheckTimer = new Timer() { Interval = delay };
+                pingCheckTimer.Elapsed += CheckIfPingIsReceived;
+            }
+        }
+
+        private void CheckIfPingIsReceived(object sender, ElapsedEventArgs e)
+        {
+            var elapsed = DateTime.Now - lastPingTime;
+            pingCheckTimer.Stop();
+            pingCheckTimer.Elapsed -= CheckIfPingIsReceived;
+            pingCheckTimer.Dispose();
+
+            Console.WriteLine("Checking if we received new ping at" + DateTime.Now.ToString());
+
+            if (elapsed.TotalMilliseconds > pingPongInterval.TotalMilliseconds * 1.5)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Socket May have died");
+                Console.WriteLine("Socket may have died");
+                OnPingDocument()?.ScheduleSolution(5, (GH_Document doc) =>
+                {
+                    socket = null;
+                    ExpireSolution(false);
+                });
+            }
+        }
+
 
         private void Socket_OnClose(object sender, CloseEventArgs e)
         {
