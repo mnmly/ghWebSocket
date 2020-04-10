@@ -84,7 +84,6 @@
     <Compile Include="ghWebSocketInfo.cs" />
     <Compile Include="WebSocketStateComponent.cs" />
     <Compile Include="ghWebSocketSend.cs" />
-    <Compile Include="WebSocketReceiveComponent.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

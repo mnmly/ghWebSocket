@@ -18,7 +18,8 @@ namespace MNML
         private DateTime lastPingTime;
         private TimeSpan pingPongInterval = new TimeSpan(0, 0, 5);
         private Timer pingCheckTimer = null;
-      
+        string latestMessage = null;
+
         /// <summary>
         /// Each implementation of GH_Component must provide a public 
         /// constructor without any arguments.
@@ -51,6 +52,8 @@ namespace MNML
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddGenericParameter("Socket", "S", "WebSocket Client", GH_ParamAccess.item);
+            pManager.AddTextParameter("Message", "M", "Message", GH_ParamAccess.item);
+
         }
 
         /// <summary>
@@ -64,7 +67,13 @@ namespace MNML
             double port = 0.0;
             bool _reconnect = false;
             bool needsUpdate = false;
-            
+
+            if (latestMessage != null)
+            {
+                DA.SetData(1, latestMessage);
+                latestMessage = null;
+            }
+
             if (!DA.GetData(0, ref host)) return;
             if (!DA.GetData(1, ref port)) return;
             DA.GetData(2, ref reconnectionInterval);
@@ -84,7 +93,11 @@ namespace MNML
             {
                 if (socket != null)
                 {
-                    socket.Close();
+
+                    if (socket.ReadyState == WebSocketState.Open)
+                    {
+                        socket.Close();
+                    }
                     socket = null;
                 }
                 socket = Connect();
@@ -97,6 +110,8 @@ namespace MNML
                 ClearRuntimeMessages();
             }
             DA.SetData(0, socket);
+
+
         }
 
         private WebSocket Connect()
@@ -122,7 +137,6 @@ namespace MNML
                 var delay = Int32.Parse(Regex.Match(e.Data, @"\d+").Value);
                 pingPongInterval = new TimeSpan(0, 0, 0, 0, delay);
                 (sender as WebSocket).Send("{\"action\":\"broadcast\", \"data\": \"mnml:pong\"}");
-                Console.WriteLine("Receiving ping at " + lastPingTime.ToString());
                 if (pingCheckTimer != null)
                 {
                     pingCheckTimer.Stop();
@@ -131,7 +145,20 @@ namespace MNML
                 }
                 pingCheckTimer = new Timer() { Interval = delay };
                 pingCheckTimer.Elapsed += CheckIfPingIsReceived;
+            } else
+            {
+                latestMessage = e.Data;
+                OnPingDocument()?.ScheduleSolution(5, ScheduleCallback);
             }
+        }
+
+        private void ScheduleCallback(GH_Document document)
+        {
+
+            if (latestMessage == null) return;
+
+            ExpireSolution(false);
+
         }
 
         private void CheckIfPingIsReceived(object sender, ElapsedEventArgs e)
@@ -149,7 +176,12 @@ namespace MNML
                 Console.WriteLine("Socket may have died");
                 OnPingDocument()?.ScheduleSolution(5, (GH_Document doc) =>
                 {
+                    if (socket.ReadyState == WebSocketState.Open)
+                    {
+                        socket.Close();
+                    }
                     socket = null;
+                    endpoint = null;
                     ExpireSolution(false);
                 });
             }
@@ -193,7 +225,10 @@ namespace MNML
                 socket.OnOpen -= Socket_OnOpen;
                 socket.OnError -= Socket_OnError;
                 socket.OnClose -= Socket_OnClose;
-                socket.Close();
+                if (socket.ReadyState == WebSocketState.Open)
+                {
+                    socket.Close();
+                }
                 socket = null;
             }
 
