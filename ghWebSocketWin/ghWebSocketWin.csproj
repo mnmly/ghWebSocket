@@ -58,8 +58,8 @@
       <HintPath>C:\Program Files\Rhino 6\Plug-ins\Grasshopper\GH_IO.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="websocket-sharp.clone, Version=1.0.2.39869, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\websocket-sharp.clone.3.0.0\lib\net45\websocket-sharp.clone.dll</HintPath>
+    <Reference Include="websocket-sharp, Version=1.0.2.59611, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocketSharp.1.0.3-rc11\lib\websocket-sharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
