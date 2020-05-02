@@ -70,16 +70,18 @@ namespace MNML
             base.AddedToDocument(document);
             Attributes.ExpireLayout();
             Attributes.PerformLayout();
-            var panel = new Grasshopper.Kernel.Special.GH_Panel();
-            panel.CreateAttributes();
-            var pivotPoint = new System.Drawing.PointF();
-            var bounds = Attributes.DocObject.Attributes.Bounds;
-            pivotPoint.X = (float)bounds.Right + 50;
-            pivotPoint.Y = (float)(bounds.Y + bounds.Height * 0.5);
-            panel.Attributes.Pivot = pivotPoint;
-            OnPingDocument().AddObject(panel, false);
+            if (Params.Output[0].SourceCount == 0) {
+                var panel = new Grasshopper.Kernel.Special.GH_Panel();
+                panel.CreateAttributes();
+                var pivotPoint = new System.Drawing.PointF();
+                var bounds = Attributes.DocObject.Attributes.Bounds;
+                pivotPoint.X = (float)bounds.Right + 50;
+                pivotPoint.Y = (float)(bounds.Y + bounds.Height * 0.5);
+                panel.Attributes.Pivot = pivotPoint;
+                OnPingDocument().AddObject(panel, false);
+                panel.AddSource(Params.Output[0]);
+            }
 
-            panel.AddSource(Params.Output[0]);
         }
 
 

@@ -110,8 +110,6 @@ namespace MNML
                 ClearRuntimeMessages();
             }
             DA.SetData(0, socket);
-
-
         }
 
         private WebSocket Connect()
@@ -240,14 +238,18 @@ namespace MNML
             base.AddedToDocument(document);
             Attributes.ExpireLayout();
             Attributes.PerformLayout();
-            var component = new WebSocketStateComponent();
-            var pivotPoint = new System.Drawing.PointF();
-            var bounds = Attributes.DocObject.Attributes.Bounds;
-            pivotPoint.X = (float)bounds.Right + 50;
-            pivotPoint.Y = (float)(bounds.Y + bounds.Height * 0.5);
-            component.Attributes.Pivot = pivotPoint;
-            OnPingDocument().AddObject(component, false);
-            component.Params.Input[0].AddSource(Params.Output[0]);
+            if (Params.Output[0].SourceCount == 0)
+            {
+                var component = new WebSocketStateComponent();
+                var pivotPoint = new System.Drawing.PointF();
+                var bounds = Attributes.DocObject.Attributes.Bounds;
+                pivotPoint.X = (float)bounds.Right + 50;
+                pivotPoint.Y = (float)(bounds.Y + bounds.Height * 0.5);
+                component.Attributes.Pivot = pivotPoint;
+                OnPingDocument().AddObject(component, false);
+                component.Params.Input[0].AddSource(Params.Output[0]);
+            }
+
         }
 
         /// <summary>
